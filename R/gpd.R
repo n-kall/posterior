@@ -15,12 +15,12 @@
 #' @param lower.tail logical; if TRUE (default), probabilities are \eqn{P[X \le x]}
 #' otherwise, \eqn{P[X > x]}.
 #'
-#' @name GPD
+#' @name Generalized_Pareto
 
 
 #' @rdname GPD
 #' @export
-dgpd <- function(x, mu = 0, sigma = 1, k = 0, log = FALSE) {
+dgeneralized_pareto <- function(x, mu = 0, sigma = 1, k = 0, log = FALSE) {
   stopifnot(length(mu) == 1 && length(sigma) == 1 && length(k) == 1)
   if (is.na(sigma) || sigma <= 0) {
     return(rep(NaN, length(x)))
@@ -43,7 +43,7 @@ dgpd <- function(x, mu = 0, sigma = 1, k = 0, log = FALSE) {
 
 #' @rdname GPD
 #' @export
-pgpd <- function(q, mu = 0, sigma = 1, k = 0, lower.tail = TRUE, log.p = FALSE) {
+pgeneralized_pareto <- function(q, mu = 0, sigma = 1, k = 0, lower.tail = TRUE, log.p = FALSE) {
   stopifnot(length(mu) == 1 && length(sigma) == 1 && length(k) == 1)
   if (is.na(sigma) || sigma <= 0) {
     return(rep(NaN, length(q)))
@@ -86,7 +86,7 @@ qgpd <- function(p, mu = 0, sigma = 1, k = 0, lower.tail = TRUE, log.p = FALSE) 
 
 #' @rdname GPD
 #' @export
-rgpd <- function(n, mu = 0, sigma = 1, k = 0) {
+rgeneralized_pareto <- function(n, mu = 0, sigma = 1, k = 0) {
   stopifnot(
     length(n) == 1 && length(mu) == 1 && length(sigma) == 1 && length(k) == 1
   )
@@ -111,7 +111,6 @@ rgpd <- function(n, mu = 0, sigma = 1, k = 0) {
 #' case of MCMC samples). The weakly informative prior is a Gaussian prior
 #' centered at 0.5.
 #'
-#' @export
 #' @param x A numeric vector. The sample from which to estimate the parameters.
 #' @param wip Logical indicating whether to adjust \eqn{k} based on a weakly
 #'   informative Gaussian prior centered on 0.5. Defaults to `TRUE`.
@@ -131,6 +130,7 @@ rgpd <- function(n, mu = 0, sigma = 1, k = 0) {
 #' Zhang, J., and Stephens, M. A. (2009). A new and efficient estimation method
 #' for the generalized Pareto distribution. *Technometrics* **51**, 316-325.
 #'
+#' @export
 gpdfit <- function(x, wip = TRUE, min_grid_pts = 30, sort_x = TRUE) {
   # see section 4 of Zhang and Stephens (2009)
   if (sort_x) {
@@ -160,7 +160,7 @@ gpdfit <- function(x, wip = TRUE, min_grid_pts = 30, sort_x = TRUE) {
     sigma_hat <- NaN
   }
 
-  list("k" = k_hat, "sigma" = sigma_hat)
+  list(k = k_hat, sigma = sigma_hat)
 }
 
 # Below is a separate function for the marginal posterior.
@@ -184,10 +184,10 @@ gpdpost <- function(x, min_grid_pts = 30, sort_x = TRUE) {
   k_w <- w_theta
   # quadrature weights are just the normalized likelihoods
   # we get the unnormalized posterior by multiplying these by the prior
-  k_d <- k_w * dgpd(-theta, mu = -1 / x[N], sigma = 1 / prior / xstar, k = 0.5)
+  k_d <- k_w * dgeneralized_pareto(-theta, mu = -1 / x[N], sigma = 1 / prior / xstar, k = 0.5)
   # normalize using the trapezoidal rule
   Z <- sum((k_d[-M] + k_d[-1]) * (k[-M] - k[-1])) / 2
   k_d <- k_d / Z
 
-  list("k" = k, "k_w" = k_w, "k_d" = k_d)
+  list(k = k, k_w = k_w, k_d = k_d)
 }
