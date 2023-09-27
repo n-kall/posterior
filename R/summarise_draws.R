@@ -119,6 +119,7 @@ summarise_draws.draws <- function(
   }
   funs <- as.list(c(...))
   .args <- as.list(.args)
+
   if (length(funs)) {
     if (is.null(names(funs))) {
       # ensure names are initialized properly
@@ -149,21 +150,29 @@ summarise_draws.draws <- function(
           stop_no_call("Cannot find function '", fname, "'.")
         }
       }
+
       funs[[i]] <- rlang::as_function(funs[[i]], env = env)
+
     }
+    # check if supplied functions have rvar methods
+    use_rvar_method <- sapply(calls, function(x) has_s3_method(x, "rvar"))
   } else {
     # default functions
     funs <- list(
-      mean = base::mean,
-      median = stats::median,
-      sd = stats::sd,
-      mad = stats::mad,
+      mean = mean,
+      median = median,
+      sd = sd,
+      mad = mad,
       quantile = quantile2,
       rhat = rhat,
       ess_bulk = ess_bulk,
       ess_tail = ess_tail
     )
+
+    use_rvar_method <- rep(TRUE, times = length(funs))
   }
+
+  names(use_rvar_method) <- names(funs)
 
   # it is more efficient to repair and transform objects for all variables
   # at once instead of doing it within the loop for each variable separately
@@ -180,7 +189,7 @@ summarise_draws.draws <- function(
   }
 
   if (.cores == 1) {
-    out <- summarise_draws_helper(.x, funs, .args)
+    out <- summarise_draws_helper(.x, funs, use_rvar_method, .args)
   } else {
     .x <- .x[, , variables_x]
     n_vars <- length(variables_x)
@@ -218,6 +227,7 @@ summarise_draws.draws <- function(
         X = chunk_list,
         fun = summarise_draws_helper,
         funs = funs,
+        use_rvar_method = use_rvar_method,
         .args = .args
       )
     } else {
@@ -226,6 +236,7 @@ summarise_draws.draws <- function(
         FUN = summarise_draws_helper,
         mc.cores = .cores,
         funs = funs,
+        use_rvar_method = use_rvar_method,
         .args = .args
       )
     }
@@ -326,21 +337,33 @@ empty_draws_summary <- function(dimensions = "variable") {
   out
 }
 
-
-create_summary_list <- function(x, v, funs, .args) {
-  draws <- drop_dims_or_classes(x[, , v], dims = 3, reset_class = FALSE)
-  args <- c(list(draws), .args)
+create_summary_list <- function(x, v, funs, use_rvar_method, .args) {
+  draws_arr <- drop_dims_or_classes(x[, , v], dims = 3, reset_class = TRUE)
+#  print(use_rvar_method)
   v_summary <- named_list(names(funs))
+  args_arr <- c(list(draws_arr), .args)
+  if (any(use_rvar_method)) {
+    draws_rvar <- rvar(draws_arr, with_chains = TRUE)
+    args_rvar <- c(list(draws_rvar), .args)
+  }
   for (m in names(funs)) {
-    v_summary[[m]] <- do.call(funs[[m]], args)
+    if (!(use_rvar_method[[m]])) {
+      print(paste(m, "using array method"))
+      v_summary[[m]] <- do.call(funs[[m]], args_arr)
+    } else {
+      print(paste(m, "using rvar method"))
+      v_summary[[m]] <- do.call(funs[[m]], args_rvar)
+    }
+
   }
   v_summary
 }
 
-summarise_draws_helper <- function(x, funs, .args) {
+summarise_draws_helper <- function(x, funs, use_rvar_method, .args) {
   variables_x <- variables(x)
+
   # get length and output names, calculated on the first variable
-  out_1 <- create_summary_list(x, variables_x[1], funs, .args)
+  out_1 <- create_summary_list(x, variables_x[1], funs, use_rvar_method, .args)
   the_names <- vector(mode = "list", length = length(funs))
   for (i in seq_along(out_1)){
     if (rlang::is_named(out_1[[i]])) {
@@ -363,7 +386,7 @@ summarise_draws_helper <- function(x, funs, .args) {
   # Do the computation for all remaining variables
   if (length(variables_x) > 1L) {
     for (v_ind in 2:length(variables_x)) {
-      out_v <- create_summary_list(x, variables_x[v_ind], funs, .args)
+      out_v <- create_summary_list(x, variables_x[v_ind], funs, use_rvar_method, .args)
       out[v_ind, ] <- unlist(out_v)
     }
   }
