@@ -19,7 +19,7 @@
 #' | [ess_quantile()] | Effective sample sizes for quantiles |
 #' | [ess_sd()] | Effective sample sizes for standard deviations |
 #' | [mcse_mean()] | Monte Carlo standard error for the mean |
-#' | [mcse_quantile()] | Monte Carlo standard error for quantiles |
+#' | [mcse_quantile()] | Monte Carlo standard error quantiles |
 #' | [mcse_sd()] | Monte Carlo standard error for standard deviations |
 #' | [rhat_basic()] | Basic version of Rhat |
 #' | [rhat()] | Improved, rank-based version of Rhat |
@@ -111,6 +111,13 @@ ess_basic.default <- function(x, split = TRUE, ...) {
 
 #' @rdname ess_basic
 #' @export
+ess_basic.draws <- function(x, ...) {
+    summarise_draws(x, ess_basic, .args = c(...))
+}
+
+
+#' @rdname ess_basic
+#' @export
 ess_basic.rvar <- function(x, split = TRUE, ...) {
   summarise_rvar_by_element_with_chains(x, ess_basic, split, ...)
 }
@@ -144,6 +151,13 @@ rhat.default <- function(x, ...) {
   rhat_tail <- .rhat(z_scale(.split_chains(fold_draws(x))))
   max(rhat_bulk, rhat_tail)
 }
+
+#' @rdname rhat
+#' @export
+rhat.draws <- function(x, ...) {
+    summarise_draws(x, rhat, .args = c(...))
+}
+
 
 #' @rdname rhat
 #' @export
@@ -185,6 +199,12 @@ ess_bulk.default <- function(x, ...) {
 
 #' @rdname ess_bulk
 #' @export
+ess_bulk.draws <- function(x, ...) {
+    summarise_draws(x, ess_bulk, .args = c(...))
+}
+
+#' @rdname ess_bulk
+#' @export
 ess_bulk.rvar <- function(x, ...) {
   summarise_rvar_by_element_with_chains(x, ess_bulk, ...)
 }
@@ -221,6 +241,12 @@ ess_tail.default <- function(x, ...) {
   q05_ess <- ess_quantile(x, 0.05)
   q95_ess <- ess_quantile(x, 0.95)
   min(q05_ess, q95_ess)
+}
+
+#' @rdname ess_tail
+#' @export
+ess_tail.draws <- function(x, ...) {
+    summarise_draws(x, ess_tail, .args = c(...))
 }
 
 #' @rdname ess_tail
@@ -270,6 +296,14 @@ ess_quantile.default <- function(x, probs = c(0.05, 0.95), names = TRUE, ...) {
 
 #' @rdname ess_quantile
 #' @export
+ess_quantile.draws <- function(x, ...) {
+    summarise_draws(x, ess_quantile, .args = c(...))
+}
+
+
+#' @rdname ess_quantile
+#'
+#' @export
 ess_quantile.rvar <- function(x, probs = c(0.05, 0.95), names = TRUE, ...) {
   summarise_rvar_by_element_with_chains(x, ess_quantile, probs, names, ...)
 }
@@ -314,10 +348,20 @@ ess_median <- function(x, ...) {
 #' @export
 ess_mean <- function(x, ...) UseMethod("ess_mean")
 
-#' @rdname ess_quantile
+#' @rdname ess_mean
 #' @export
 ess_mean.default <- function(x, ...) {
   .ess(.split_chains(x))
+}
+
+#' @rdname ess_mean
+#' @export
+ess_mean.draws <- function(x, ...) {
+  if (length(dim(x)) > 2) {
+    summarise_draws(x, ess_mean, .args = c(...))
+  } else {
+    ess_mean.default(x, ...)
+  }
 }
 
 #' @rdname ess_mean
@@ -352,6 +396,16 @@ ess_sd <- function(x, ...) UseMethod("ess_sd")
 #' @export
 ess_sd.default <- function(x, ...) {
   .ess(.split_chains(abs(x-mean(x))))
+}
+
+#' @rdname ess_sd
+#' @export
+ess_sd.draws <- function(x, ...) {
+  if (length(dim(x)) > 2) {
+    summarise_draws(x, ess_sd, .args = c(...))
+  } else {
+    ess_sd.default(x, ...)
+  }
 }
 
 #' @rdname ess_sd
@@ -397,6 +451,16 @@ mcse_quantile.default <- function(x, probs = c(0.05, 0.95), names = TRUE, ...) {
     names(out) <- paste0("mcse_q", probs * 100)
   }
   out
+}
+
+#' @rdname mcse_quantile
+#' @export
+mcse_quantile.draws <- function(x, ...) {
+  if (length(dim(x)) > 2) {
+    summarise_draws(x, mcse_quantile, .args = c(...))
+  } else {
+    mcse_quantile.default(x, ...)
+  }
 }
 
 #' @rdname mcse_quantile
@@ -452,6 +516,17 @@ mcse_mean.default <- function(x, ...) {
 
 #' @rdname mcse_mean
 #' @export
+mcse_mean.draws <- function(x, ...) {
+  if (length(dim(x)) > 2) {
+    summarise_draws(x, mcse_mean, .args = c(...))
+  } else {
+    mcse_mean.default(x, ...)
+  }
+}
+
+
+#' @rdname mcse_mean
+#' @export
 mcse_mean.rvar <- function(x, ...) {
   summarise_rvar_by_element_with_chains(x, mcse_mean, ...)
 }
@@ -498,6 +573,13 @@ mcse_sd.default <- function(x, ...) {
   varsd <- varvar / Evar / 4
   sqrt(varsd)
 }
+
+#' @rdname mcse_sd
+#' @export
+mcse_sd.draws <- function(x, ...) {
+    summarise_draws(x, mcse_sd, .args = c(...))
+}
+
 
 #' @rdname mcse_sd
 #' @export
@@ -551,6 +633,13 @@ quantile2.default <- function(
   }
   out
 }
+
+#' @rdname quantile2
+#' @export
+quantile2.draws <- function(x, ...) {
+    summarise_draws(x, quantile2, .args = c(...))
+}
+
 
 #' @rdname quantile2
 #' @export
