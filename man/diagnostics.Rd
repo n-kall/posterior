@@ -19,7 +19,7 @@ A list of available diagnostics and links to their individual help pages.
    \code{\link[=ess_quantile]{ess_quantile()}} \tab Effective sample sizes for quantiles \cr
    \code{\link[=ess_sd]{ess_sd()}} \tab Effective sample sizes for standard deviations \cr
    \code{\link[=mcse_mean]{mcse_mean()}} \tab Monte Carlo standard error for the mean \cr
-   \code{\link[=mcse_quantile]{mcse_quantile()}} \tab Monte Carlo standard error for quantiles \cr
+   \code{\link[=mcse_quantile]{mcse_quantile()}} \tab Monte Carlo standard error quantiles \cr
    \code{\link[=mcse_sd]{mcse_sd()}} \tab Monte Carlo standard error for standard deviations \cr
    \code{\link[=rhat_basic]{rhat_basic()}} \tab Basic version of Rhat \cr
    \code{\link[=rhat]{rhat()}} \tab Improved, rank-based version of Rhat \cr

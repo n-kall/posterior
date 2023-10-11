@@ -3,12 +3,15 @@
 \name{rhat}
 \alias{rhat}
 \alias{rhat.default}
+\alias{rhat.draws}
 \alias{rhat.rvar}
 \title{Rhat convergence diagnostic}
 \usage{
 rhat(x, ...)
 
 \method{rhat}{default}(x, ...)
+
+\method{rhat}{draws}(x, ...)
 
 \method{rhat}{rvar}(x, ...)
 }

@@ -3,12 +3,15 @@
 \name{mcse_sd}
 \alias{mcse_sd}
 \alias{mcse_sd.default}
+\alias{mcse_sd.draws}
 \alias{mcse_sd.rvar}
 \title{Monte Carlo standard error for the standard deviation}
 \usage{
 mcse_sd(x, ...)
 
 \method{mcse_sd}{default}(x, ...)
+
+\method{mcse_sd}{draws}(x, ...)
 
 \method{mcse_sd}{rvar}(x, ...)
 }

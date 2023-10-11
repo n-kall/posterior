@@ -3,12 +3,15 @@
 \name{ess_bulk}
 \alias{ess_bulk}
 \alias{ess_bulk.default}
+\alias{ess_bulk.draws}
 \alias{ess_bulk.rvar}
 \title{Bulk effective sample size (bulk-ESS)}
 \usage{
 ess_bulk(x, ...)
 
 \method{ess_bulk}{default}(x, ...)
+
+\method{ess_bulk}{draws}(x, ...)
 
 \method{ess_bulk}{rvar}(x, ...)
 }

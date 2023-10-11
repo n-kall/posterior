@@ -3,12 +3,15 @@
 \name{mcse_mean}
 \alias{mcse_mean}
 \alias{mcse_mean.default}
+\alias{mcse_mean.draws}
 \alias{mcse_mean.rvar}
 \title{Monte Carlo standard error for the mean}
 \usage{
 mcse_mean(x, ...)
 
 \method{mcse_mean}{default}(x, ...)
+
+\method{mcse_mean}{draws}(x, ...)
 
 \method{mcse_mean}{rvar}(x, ...)
 }

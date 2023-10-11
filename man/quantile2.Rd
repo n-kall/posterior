@@ -3,12 +3,15 @@
 \name{quantile2}
 \alias{quantile2}
 \alias{quantile2.default}
+\alias{quantile2.draws}
 \alias{quantile2.rvar}
 \title{Compute Quantiles}
 \usage{
 quantile2(x, probs = c(0.05, 0.95), na.rm = FALSE, ...)
 
 \method{quantile2}{default}(x, probs = c(0.05, 0.95), na.rm = FALSE, names = TRUE, ...)
+
+\method{quantile2}{draws}(x, ...)
 
 \method{quantile2}{rvar}(x, probs = c(0.05, 0.95), na.rm = FALSE, names = TRUE, ...)
 }

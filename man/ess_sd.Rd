@@ -3,12 +3,15 @@
 \name{ess_sd}
 \alias{ess_sd}
 \alias{ess_sd.default}
+\alias{ess_sd.draws}
 \alias{ess_sd.rvar}
 \title{Effective sample size for the standard deviation}
 \usage{
 ess_sd(x, ...)
 
 \method{ess_sd}{default}(x, ...)
+
+\method{ess_sd}{draws}(x, ...)
 
 \method{ess_sd}{rvar}(x, ...)
 }

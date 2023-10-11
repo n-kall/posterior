@@ -3,12 +3,15 @@
 \name{ess_basic}
 \alias{ess_basic}
 \alias{ess_basic.default}
+\alias{ess_basic.draws}
 \alias{ess_basic.rvar}
 \title{Basic version of the effective sample size}
 \usage{
 ess_basic(x, ...)
 
 \method{ess_basic}{default}(x, split = TRUE, ...)
+
+\method{ess_basic}{draws}(x, ...)
 
 \method{ess_basic}{rvar}(x, split = TRUE, ...)
 }

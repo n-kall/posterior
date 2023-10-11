@@ -3,12 +3,15 @@
 \name{ess_tail}
 \alias{ess_tail}
 \alias{ess_tail.default}
+\alias{ess_tail.draws}
 \alias{ess_tail.rvar}
 \title{Tail effective sample size (tail-ESS)}
 \usage{
 ess_tail(x, ...)
 
 \method{ess_tail}{default}(x, ...)
+
+\method{ess_tail}{draws}(x, ...)
 
 \method{ess_tail}{rvar}(x, ...)
 }

@@ -3,6 +3,7 @@
 \name{mcse_quantile}
 \alias{mcse_quantile}
 \alias{mcse_quantile.default}
+\alias{mcse_quantile.draws}
 \alias{mcse_quantile.rvar}
 \alias{mcse_median}
 \title{Monte Carlo standard error for quantiles}
@@ -10,6 +11,8 @@
 mcse_quantile(x, probs = c(0.05, 0.95), ...)
 
 \method{mcse_quantile}{default}(x, probs = c(0.05, 0.95), names = TRUE, ...)
+
+\method{mcse_quantile}{draws}(x, ...)
 
 \method{mcse_quantile}{rvar}(x, probs = c(0.05, 0.95), names = TRUE, ...)
 
