@@ -24,6 +24,11 @@
 #'   possible, otherwise errors. The default is `.cores = 1`, in which case no
 #'   parallelization is implemented. By default, a socket cluster is used on
 #'   Windows and forks otherwise.
+#' @param .use_rvars (logical) Should the summary functions use `rvar`s, which
+#'   allows for weight support? If `NA`, `rvar`s will be used but if
+#'   there are resulting errors, arrays will be used instead. If `TRUE`, `rvar`s
+#'   will be used without fallback. If `FALSE`, arrays will be used. The default is
+#'   `FALSE`.
 #'
 #' @return
 #' The `summarise_draws()` methods return a [tibble][tibble::tibble] data frame.
@@ -330,7 +335,7 @@ empty_draws_summary <- function(dimensions = "variable") {
 }
 
 
-create_summary_list <- function(x, v, funs, .args, .use_rvars = FALSE) {
+create_summary_list <- function(x, v, funs, .args, .use_rvars) {
 
   draws <- drop_dims_or_classes(x[, , v], dims = 3, reset_class = FALSE)
   v_summary <- named_list(names(funs))
@@ -339,18 +344,26 @@ create_summary_list <- function(x, v, funs, .args, .use_rvars = FALSE) {
     lw <- weights(x, log = TRUE)
     rvar_draws <- rvar(draws, with_chains = TRUE, log_weights = lw)
 
+    fallback_funs <- c()
+
     for (m in names(funs)) {
       args <- c(list(rvar_draws), .args[[m]])
 
-      try_output <- tryCatch(do.call(funs[[m]], args), error = function(e) NA)
+      try_output <- tryCatch(do.call(funs[[m]], args), error = function(e) "rvar_err")
 
-      if (is.na(try_output)) {
+      if (any(try_output == "rvar_err", na.rm = TRUE)) {
+        fallback_funs <- c(fallback_funs, names(funs[m]))
         args <- c(list(draws), .args[[m]])
         v_summary[[m]] <- do.call(funs[[m]], args)
       } else {
         v_summary[[m]] <- try_output
       }
     }
+    if (length(fallback_funs)) {
+      message(paste0("rvar gave error for variable ",
+                     v, " for functions ", paste(fallback_funs, collapse = ", "), ". Falling back to array, weights will not be considered.\n"))
+    }
+
   } else if (.use_rvars) { # use rvars without any fallback
 
     lw <- weights(x, log = TRUE)
@@ -358,6 +371,7 @@ create_summary_list <- function(x, v, funs, .args, .use_rvars = FALSE) {
 
     for (m in names(funs)) {
       args <- c(list(rvar_draws), .args[[m]])
+      v_summary[[m]] <- do.call(funs[[m]], args)
     }
   } else if (!(.use_rvars)) { # do not use rvars, use arrays only
 
@@ -369,7 +383,7 @@ create_summary_list <- function(x, v, funs, .args, .use_rvars = FALSE) {
   v_summary
 }
 
-summarise_draws_helper <- function(x, funs, .args, .use_rvars = FALSE) {
+summarise_draws_helper <- function(x, funs, .args, .use_rvars) {
   variables_x <- variables(x)
   # get length and output names, calculated on the first variable
   out_1 <- create_summary_list(x, variables_x[1], funs, .args, .use_rvars = .use_rvars)
