@@ -331,15 +331,40 @@ empty_draws_summary <- function(dimensions = "variable") {
 
 
 create_summary_list <- function(x, v, funs, .args, .use_rvars = FALSE) {
+
   draws <- drop_dims_or_classes(x[, , v], dims = 3, reset_class = FALSE)
-  if (.use_rvars) {
-    lw <- weights(x, log = TRUE)
-    draws <- rvar(draws, with_chains = TRUE, log_weights = lw)
-  }   
   v_summary <- named_list(names(funs))
-  for (m in names(funs)) {
-    args <- c(list(draws), .args[[m]])
-    v_summary[[m]] <- do.call(funs[[m]], args)
+
+  if (is.na(.use_rvars)) { # use rvars if possible, then fallback to array
+    lw <- weights(x, log = TRUE)
+    rvar_draws <- rvar(draws, with_chains = TRUE, log_weights = lw)
+
+    for (m in names(funs)) {
+      args <- c(list(rvar_draws), .args[[m]])
+
+      try_output <- tryCatch(do.call(funs[[m]], args), error = function(e) NA)
+
+      if (is.na(try_output)) {
+        args <- c(list(draws), .args[[m]])
+        v_summary[[m]] <- do.call(funs[[m]], args)
+      } else {
+        v_summary[[m]] <- try_output
+      }
+    }
+  } else if (.use_rvars) { # use rvars without any fallback
+
+    lw <- weights(x, log = TRUE)
+    rvar_draws <- rvar(draws, with_chains = TRUE, log_weights = lw)
+
+    for (m in names(funs)) {
+      args <- c(list(rvar_draws), .args[[m]])
+    }
+  } else if (!(.use_rvars)) { # do not use rvars, use arrays only
+
+    for (m in names(funs)) {
+      args <- c(list(draws), .args[[m]])
+      v_summary[[m]] <- do.call(funs[[m]], args)
+    }
   }
   v_summary
 }
