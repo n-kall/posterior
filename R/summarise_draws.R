@@ -289,7 +289,34 @@ print.draws_summary <- function(x, ..., num_args = NULL) {
       x[[i]] <- do.call(tibble::set_num_opts, c(list(x[[i]]), num_args))
     }
   }
+
+  # convert character message to list
+  msg_column <- strsplit(x[[".messages"]], ";;")
+
+  # get unique messages
+  unique_messages <- unique(na.omit(unlist(msg_column)))
+
+  for (m in seq_along(msg_column)) {
+    for (s in seq_along(msg_column[[m]])) {
+      if (is.na(msg_column[[m]][[s]])) {
+        msg_column[[m]][[s]] <- ""
+      } else {
+        msg_column[[m]][[s]] <- which(msg_column[[m]][[s]] == unique_messages)
+      }
+    }
+    msg_column[[m]] <- as.character(paste(msg_column[[m]], collapse = ", "))
+  }
+
+  # replace character message in table with number
+  x[[".messages"]] <- unlist(msg_column)
+  
   NextMethod()
+
+  unique_messages <- paste(1:length(unique_messages), unique_messages)
+  
+  cat("\nMessages:", unique_messages, "\n", sep = "\n")
+
+  
 }
 
 #' @rdname draws_summary
@@ -331,8 +358,19 @@ create_summary_list <- function(x, v, funs, .args) {
   draws <- drop_dims_or_classes(x[, , v], dims = 3, reset_class = FALSE)
   args <- c(list(draws), .args)
   v_summary <- named_list(names(funs))
+  messages <- c()
   for (m in names(funs)) {
     v_summary[[m]] <- do.call(funs[[m]], args)
+    msg <- get_message(v_summary[[m]])
+    if(length(msg)) {
+      msg <- paste0(names(funs[m]),": ", msg)
+      messages <- c(messages, msg)
+    }
+  }
+  if (length(messages)) {
+    v_summary[[".messages"]] <- paste(messages, collapse = ";;")
+  } else {
+    v_summary[[".messages"]] <- NA
   }
   v_summary
 }
@@ -368,6 +406,7 @@ summarise_draws_helper <- function(x, funs, .args) {
     }
   }
   out <- tibble::as_tibble(out)
+  out <- type.convert(out, as.is = TRUE)
   out$variable <- variables_x
   out <- move_to_start(out, "variable")
   class(out) <- class_draws_summary()

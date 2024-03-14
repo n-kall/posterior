@@ -238,3 +238,14 @@ has_s3_method <- function(f, signature) {
   }
   FALSE
 }
+
+
+# add a message to the message attribute
+add_message <- function(x, msg) {
+  attr(x, "message") <- c(attr(x, "message"), msg)
+  x
+}
+
+get_message <- function(x) {
+  attr(x, "message")
+}

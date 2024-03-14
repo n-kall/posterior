@@ -321,6 +321,7 @@ ess_mean <- function(x, ...) UseMethod("ess_mean")
 #' @export
 ess_mean.default <- function(x, ...) {
   .ess(.split_chains(x))
+  
 }
 
 #' @rdname ess_mean
@@ -506,6 +507,28 @@ mcse_sd.default <- function(x, ...) {
 #' @export
 mcse_sd.rvar <- function(x, ...) {
   summarise_rvar_by_element_with_chains(x, mcse_sd, ...)
+}
+
+
+#' @export
+mcse_Pr <- function(x, ...) {
+  UseMethod("mcse_Pr")
+}
+
+#' @export
+mcse_Pr.default <- function(x, ...) {
+  mcse_mean(as.numeric(x))
+}
+
+#' @export
+mcse_Pr.logical <- function(x, ...) {
+  mcse_mean(as.numeric(x))
+}
+
+#' @export
+mcse_Pr.rvar <- function(x, ...) {
+
+
 }
 
 #' Compute Quantiles
@@ -705,7 +728,8 @@ fold_draws <- function(x) {
 .rhat <- function(x) {
   x <- as.matrix(x)
   if (should_return_NA(x)) {
-    return(NA_real_)
+    out <- add_message(NA_real_, "Constant or infinite values")
+    return(out)
   }
   nchains <- NCOL(x)
   niterations <- NROW(x)
@@ -721,6 +745,9 @@ fold_draws <- function(x) {
 #' @template return-conv
 #' @noRd
 .ess <- function(x) {
+
+  msg <- list()
+  
   x <- as.matrix(x)
   nchains <- NCOL(x)
   niterations <- NROW(x)
@@ -775,10 +802,12 @@ fold_draws <- function(x) {
   # Safety check for negative values and with max ess equal to ess*log10(ess)
   tau_bound <- 1 / log10(ess)
   if (tau_hat < tau_bound) {
-    warning_no_call("The ESS has been capped to avoid unstable estimates.")
+    msg <- c(msg, "The ESS has been capped to avoid unstable estimates.")
     tau_hat <- tau_bound
   }
   ess <- ess / tau_hat
+
+  ess <- add_message(ess, msg)
   ess
 }
 
