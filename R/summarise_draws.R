@@ -304,7 +304,7 @@ print.draws_summary <- function(x, ..., num_args = NULL) {
         msg_column[[m]][[s]] <- which(msg_column[[m]][[s]] == unique_messages)
       }
     }
-    msg_column[[m]] <- as.character(paste(msg_column[[m]], collapse = ", "))
+    msg_column[[m]] <- as.character(paste(sort(msg_column[[m]]), collapse = ", "))
   }
 
   # replace character message in table with number
@@ -362,7 +362,7 @@ create_summary_list <- function(x, v, funs, .args) {
   for (m in names(funs)) {
     v_summary[[m]] <- do.call(funs[[m]], args)
     msg <- get_message(v_summary[[m]])
-    if(length(msg)) {
+    if (length(msg)) {
       msg <- paste0(names(funs[m]),": ", msg)
       messages <- c(messages, msg)
     }
