@@ -285,7 +285,22 @@ pareto_smooth.default <- function(x,
 
   # automatically calculate relative efficiency
   if (is.null(r_eff)) {
-    r_eff <- ess_tail(x) / S
+    if (tail == "left") {
+      r_eff <- ess_quantile(x, probs = 0.05) / S
+    } else if (tail == "right") {
+      r_eff <- ess_quantile(x, probs = 0.95) / S
+    } else if (tail == "both") {
+      r_eff <- ess_tail(x) / S
+    }
+    if (is.na(r_eff)) {
+      warning_no_call("Input has constant tail, so relative efficiency cannot be calculated automatically. Fitting of generalized Pareto distribution not performed.")
+      if (!return_k) {
+        out <- x
+      } else {
+        out <- list(x = x, diagnostics = NA_real_)
+      }
+      return(out)
+    }
   }
 
   # automatically calculate tail length
@@ -293,19 +308,35 @@ pareto_smooth.default <- function(x,
     ndraws_tail <- ps_tail_length(S, r_eff)
   }
 
-  if (tail == "both") {
+  # check for constant tail
+  x_sorted <- sort(x)
+  constant_left_tail <- is_constant(x_sorted[1:ndraws_tail])
+  constant_right_tail <- is_constant(x_sorted[(length(x) - ndraws_tail):length(x)])
+  
+  if ((constant_left_tail && tail %in% c("left", "both")) ||
+        constant_right_tail && tail %in% c("right", "both")) {
+    warning_no_call("Input contains infinite or NA values, or is constant. Fitting of generalized Pareto distribution not performed.")
+    if (!return_k) {
+      out <- x
+    } else {
+      out <- list(x = x, diagnostics = NA_real_)
+    }
+    return(out)
+  }
 
+  if (ndraws_tail < 5) {
+    warning("Number of tail draws cannot be less than 5. ",
+            "Changing to ", 5, ".")
+    ndraws_tail <- 5
+    }
+  
+  if (tail == "both") {
+    
     if (ndraws_tail > S / 2) {
       warning("Number of tail draws cannot be more than half ",
               "the total number of draws if both tails are fit, ",
               "changing to ", S / 2, ".")
       ndraws_tail <- S / 2
-    }
-
-    if (ndraws_tail < 5) {
-      warning("Number of tail draws cannot be less than 5. ",
-              "Changing to ", 5, ".")
-      ndraws_tail <- 5
     }
 
     # left tail
@@ -332,7 +363,7 @@ pareto_smooth.default <- function(x,
     x <- smoothed$x
 
   } else {
-
+    
     smoothed <- .pareto_smooth_tail(
       x,
       ndraws_tail = ndraws_tail,
